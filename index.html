@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Симулятор Епідемії: SEIR-модель</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo-section">
+      <svg class="biohazard-icon" viewBox="0 0 24 24">
+        <path d="M12 2a3 3 0 0 0-2.83 2H5.17A3 3 0 0 0 3 6.17V10a3 3 0 0 0 2 2.83V16a3 3 0 0 0 3 3h2.17A3 3 0 0 0 13 22a3 3 0 0 0 2.83-2H18a3 3 0 0 0 3-3v-3.17A3 3 0 0 0 23 11a3 3 0 0 0-2-2.83V5a3 3 0 0 0-3-3h-2.17A3 3 0 0 0 13 2h-1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-6 2h2v2H6V7zm10 0h2v2h-2V7zm-4 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 3h2v2H6v-2zm10 0h2v2h-2v-2zM8 18h2v2H8v-2zm6 0h2v2h-2v-2z"/>
+      </svg>
+      <input type="text" id="disease-name" class="disease-name-input" value="Вірус-X" title="Назва штаму вірусу">
+    </div>
+
+    <div class="news-ticker-container">
+      <span class="news-tag">Новини</span>
+      <span id="news-text" class="news-text">Оберіть країну на карті для запуску епідемії або налаштуйте сценарій.</span>
+    </div>
+
+    <div class="top-stats">
+      <button id="theme-toggle-btn" class="theme-toggle-btn" title="Змінити тему (Світла / Темна)">
+        <svg id="theme-icon-sun" class="theme-icon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+        <svg id="theme-icon-moon" class="theme-icon" style="display:none;" viewBox="0 0 24 24"><path d="M12.1,22c-4.9,0-9-4.1-9-9s4.1-9,9-9c0.5,0,1,0,1.5,0.1c0.3,0.1,0.5,0.4,0.4,0.7c-0.1,0.3-0.4,0.5-0.7,0.4c-0.4,0-0.8-0.1-1.2-0.1c-3.9,0-7,3.1-7,7s3.1,7,7,7c2.3,0,4.4-1.1,5.7-2.9c0.2-0.3,0.5-0.3,0.8-0.1c0.3,0.2,0.3,0.5,0.1,0.8C17.7,20.4,15,22,12.1,22z"/></svg>
+        <span id="theme-btn-text">Тема</span>
+      </button>
+
+      <div id="dna-pill-btn" class="stat-pill dna-pill" data-open-modal="upgrades" title="Очки ДНК для еволюції штаму">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2c-.55 0-1 .45-1 1v1.1c-2.83.48-5 2.94-5 5.9 0 1.34.45 2.58 1.21 3.57L5.7 15.08C5.26 15.65 5 16.3 5 17c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3 0-.7-.26-1.35-.7-1.92l-1.51-1.51c.76-.99 1.21-2.23 1.21-3.57 0-2.96-2.17-5.42-5-5.9V3c0-.55-.45-1-1-1zm0 4c2.21 0 4 1.79 4 4 0 .86-.28 1.66-.75 2.32l-1.42-1.42c.11-.28.17-.58.17-.9 0-1.1-.9-2-2-2s-2 .9-2 2c0 .32.06.62.17.9l-1.42 1.42C8.28 11.66 8 10.86 8 10c0-2.21 1.79-4 4-4zm-4 12c-.55 0-1-.45-1-1 0-.25.09-.48.26-.66L8.7 15h6.6l1.44 1.34c.17.18.26.41.26.66 0 .55-.45 1-1 1H8z"/>
+        </svg>
+        <span id="dna-count">16</span> ДНК
+      </div>
+
+      <div class="stat-pill">
+        <span>День:</span>
+        <strong id="days-count">0</strong>
+      </div>
+
+      <div class="speed-controls">
+        <button class="speed-btn active" data-speed="0" title="Пауза">
+          <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button class="speed-btn" data-speed="1" title="Звичайна швидкість (1x)">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="speed-btn" data-speed="2" title="Прискорена (2x)">
+          <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+        </button>
+        <button class="speed-btn" data-speed="5" title="Максимальна (5x)">
+          <svg viewBox="0 0 24 24"><path d="M13 6v12l8.5-6L13 6zM4 18l8.5-6L4 6v12zm15-12h2v12h-2V6z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-view">
+    <div class="map-svg-container">
+      <svg id="world-svg" viewBox="0 0 2000 1001" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+
+    <div id="vehicles-overlay" class="bubble-overlay"></div>
+    <div id="bubble-overlay" class="bubble-overlay"></div>
+
+    <div id="start-hint" class="start-hint-banner">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      <span>Оберіть країну на карті, щоб запустити епідемію (Пацієнт Зеро)</span>
+    </div>
+
+    <div id="country-tooltip" class="country-tooltip">
+      <div id="tooltip-country-name" class="tooltip-title">Країна</div>
+      <div class="tooltip-row">
+        <span>Здорові (S):</span>
+        <span id="tooltip-healthy-val" class="tooltip-val">0</span>
+      </div>
+      <div class="tooltip-row">
+        <span>В інкубації (E):</span>
+        <span id="tooltip-exposed-val" class="tooltip-val exposed">0</span>
+      </div>
+      <div class="tooltip-row">
+        <span>Заражені (I):</span>
+        <span id="tooltip-infected-val" class="tooltip-val infected">0</span>
+      </div>
+      <div class="tooltip-row">
+        <span>Померлі (D):</span>
+        <span id="tooltip-dead-val" class="tooltip-val dead">0</span>
+      </div>
+    </div>
+
+    <div id="country-drawer" class="country-drawer">
+      <div class="drawer-header">
+        <h3 id="drawer-country-name" class="drawer-title">Країна</h3>
+        <button id="drawer-close-btn" class="drawer-close">&times;</button>
+      </div>
+
+      <div class="pop-bar">
+        <div id="drawer-bar-healthy" class="pop-bar-healthy" style="width: 100%;"></div>
+        <div id="drawer-bar-exposed" class="pop-bar-exposed" style="width: 0%;"></div>
+        <div id="drawer-bar-infected" class="pop-bar-infected" style="width: 0%;"></div>
+        <div id="drawer-bar-recovered" class="pop-bar-recovered" style="width: 0%;"></div>
+        <div id="drawer-bar-dead" class="pop-bar-dead" style="width: 0%;"></div>
+      </div>
+
+      <div style="font-size: 12px; margin-bottom: 10px;">
+        <div class="tooltip-row">
+          <span>Здорові (S):</span>
+          <span id="drawer-healthy-val" class="tooltip-val">0</span>
+        </div>
+        <div class="tooltip-row">
+          <span>В інкубації (E):</span>
+          <span id="drawer-exposed-val" class="tooltip-val exposed">0</span>
+        </div>
+        <div class="tooltip-row">
+          <span>Хворі (I):</span>
+          <span id="drawer-infected-val" class="tooltip-val infected">0</span>
+        </div>
+        <div class="tooltip-row">
+          <span>Померлі (D):</span>
+          <span id="drawer-dead-val" class="tooltip-val dead">0</span>
+        </div>
+      </div>
+
+      <div id="drawer-badges" class="drawer-badges"></div>
+
+      <button id="drawer-start-btn" class="drawer-action-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        <span>Почати тут</span>
+      </button>
+    </div>
+  </main>
+
+  <footer class="bottom-bar">
+    <div class="global-counters">
+      <div class="counter-box">
+        <span class="counter-label">В інкубації (E)</span>
+        <span id="total-exposed" class="counter-value exposed">0</span>
+      </div>
+      <div class="counter-box">
+        <span class="counter-label">Хворі (I)</span>
+        <span id="total-infected" class="counter-value infected">0</span>
+      </div>
+      <div class="counter-box">
+        <span class="counter-label">Загиблі (D)</span>
+        <span id="total-dead" class="counter-value dead">0</span>
+      </div>
+      <div class="counter-box">
+        <span class="counter-label">Здорові (S)</span>
+        <span id="total-healthy" class="counter-value healthy">0</span>
+      </div>
+    </div>
+
+    <div class="cure-progress-container">
+      <div class="cure-header">
+        <span class="cure-label">
+          <svg viewBox="0 0 24 24"><path d="M6 3h12v2H6zm11 3H7c-.55 0-1 .45-1 1v11c0 1.66 1.34 3 3 3h6c1.66 0 3-1.34 3-3V7c0-.55-.45-1-1-1z"/></svg>
+          Вакцина (Cure)
+        </span>
+        <span id="cure-percent" class="cure-percent">0%</span>
+      </div>
+      <div class="cure-track">
+        <div id="cure-fill" class="cure-fill"></div>
+      </div>
+    </div>
+
+    <nav class="action-menu">
+      <button class="menu-btn" data-open-modal="setup">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        <span>Нова гра</span>
+      </button>
+
+      <button class="menu-btn primary" data-open-modal="upgrades">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2c-.55 0-1 .45-1 1v1.1c-2.83.48-5 2.94-5 5.9 0 1.34.45 2.58 1.21 3.57L5.7 15.08C5.26 15.65 5 16.3 5 17c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3 0-.7-.26-1.35-.7-1.92l-1.51-1.51c.76-.99 1.21-2.23 1.21-3.57 0-2.96-2.17-5.42-5-5.9V3c0-.55-.45-1-1-1zm0 4c2.21 0 4 1.79 4 4 0 .86-.28 1.66-.75 2.32l-1.42-1.42c.11-.28.17-.58.17-.9 0-1.1-.9-2-2-2s-2 .9-2 2c0 .32.06.62.17.9l-1.42 1.42C8.28 11.66 8 10.86 8 10c0-2.21 1.79-4 4-4zm-4 12c-.55 0-1-.45-1-1 0-.25.09-.48.26-.66L8.7 15h6.6l1.44 1.34c.17.18.26.41.26.66 0 .55-.45 1-1 1H8z"/>
+        </svg>
+        <span>Еволюція</span>
+      </button>
+
+      <button class="menu-btn" data-open-modal="chart">
+        <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+        <span>Графік SEIR</span>
+      </button>
+
+      <button class="menu-btn" data-open-modal="params">
+        <svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+        <span>Параметри</span>
+      </button>
+
+      <button class="menu-btn" data-open-modal="countries">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        <span>Країни</span>
+      </button>
+
+      <button class="menu-btn" data-open-modal="theory">
+        <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+        <span>Біологія</span>
+      </button>
+    </nav>
+  </footer>
+
+  <div id="modal-setup" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 800px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <h2 class="modal-title">Налаштування нової епідемії</h2>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 20px;">
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display:block; margin-bottom: 6px;">
+            Назва вірусу / патогену:
+          </label>
+          <input type="text" id="setup-disease-name" class="table-search-input" value="Вірус-X" placeholder="Введіть назву штаму...">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display:block; margin-bottom: 8px;">
+            Оберіть сценарій патогену (Пресети):
+          </label>
+          <div class="setup-presets-grid">
+            <div class="preset-card active" data-preset="custom">
+              <div class="preset-title">Власний патоген</div>
+              <div class="preset-desc">Створіть свій унікальний штам. Початково збалансовані параметри.</div>
+            </div>
+            <div class="preset-card" data-preset="spanish_flu">
+              <div class="preset-title">Іспанський грип 1918</div>
+              <div class="preset-desc">R₀ ≈ 2.8. Блискавичний аерозольний спалах, пневмонія та висока летальність.</div>
+            </div>
+            <div class="preset-card" data-preset="plague">
+              <div class="preset-title">Чорна смерть (Чума)</div>
+              <div class="preset-desc">R₀ ≈ 3.2. Зоонозний вектор (гризуни), некроз тканин та висока смертність.</div>
+            </div>
+            <div class="preset-card" data-preset="covid19">
+              <div class="preset-title">COVID-19</div>
+              <div class="preset-desc">R₀ ≈ 3.4. Тривалий інкубаційний період (SEIR), надшвидке авіапоширення.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display:block; margin-bottom: 8px;">
+            Рівень складності (Реакція людства):
+          </label>
+          <div class="diff-options-grid">
+            <div class="diff-btn diff-easy" data-diff="easy">
+              <div class="diff-name">Легко</div>
+              <div class="diff-desc">Слабкий контроль, повільні ліки</div>
+            </div>
+            <div class="diff-btn diff-normal active" data-diff="normal">
+              <div class="diff-name">Нормально</div>
+              <div class="diff-desc">Реалістичний баланс ВООЗ</div>
+            </div>
+            <div class="diff-btn diff-hard" data-diff="hard">
+              <div class="diff-name">Складно</div>
+              <div class="diff-desc">Суворий локдаун, швидка вакцина</div>
+            </div>
+            <div class="diff-btn diff-hell" data-diff="hell">
+              <div class="diff-name">Hell</div>
+              <div class="diff-desc">Екстремальний спротив людства</div>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-start-simulation" class="launch-game-btn">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span>Розпочати пандемію</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-upgrades" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2c-.55 0-1 .45-1 1v1.1c-2.83.48-5 2.94-5 5.9 0 1.34.45 2.58 1.21 3.57L5.7 15.08C5.26 15.65 5 16.3 5 17c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3 0-.7-.26-1.35-.7-1.92l-1.51-1.51c.76-.99 1.21-2.23 1.21-3.57 0-2.96-2.17-5.42-5-5.9V3c0-.55-.45-1-1-1zm0 4c2.21 0 4 1.79 4 4 0 .86-.28 1.66-.75 2.32l-1.42-1.42c.11-.28.17-.58.17-.9 0-1.1-.9-2-2-2s-2 .9-2 2c0 .32.06.62.17.9l-1.42 1.42C8.28 11.66 8 10.86 8 10c0-2.21 1.79-4 4-4zm-4 12c-.55 0-1-.45-1-1 0-.25.09-.48.26-.66L8.7 15h6.6l1.44 1.34c.17.18.26.41.26.66 0 .55-.45 1-1 1H8z"/>
+          </svg>
+          <h2 class="modal-title">Лабораторія мутацій та біологія штаму</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="stat-pill dna-pill" style="margin:0;">
+            <span id="modal-dna-display">16</span> ДНК
+          </div>
+          <button class="modal-close-btn">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="virion-summary-banner">
+          <div>
+            <strong style="color:var(--text-primary);font-size:15px;" id="virion-banner-name">Штам Вірус-X</strong>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Модифікація геному та капсиду віріона в реальному часі</div>
+          </div>
+          <div class="virion-summary-metrics">
+            <div class="virion-metric-item">
+              <span class="virion-metric-lbl">Заразність (β)</span>
+              <span id="virion-metric-infect" class="virion-metric-val infect">0.65</span>
+            </div>
+            <div class="virion-metric-item">
+              <span class="virion-metric-lbl">Летальність (μ)</span>
+              <span id="virion-metric-lethal" class="virion-metric-val lethal">1.5%</span>
+            </div>
+            <div class="virion-metric-item">
+              <span class="virion-metric-lbl">Захист від ліків</span>
+              <span id="virion-metric-cure" class="virion-metric-val cure">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="transmission">Шляхи передачі (Трансмісія)</button>
+          <button class="tab-btn" data-tab="symptoms">Симптоми та патогенез</button>
+          <button class="tab-btn" data-tab="abilities">Стійкість та біозахист</button>
+        </div>
+        <div id="upgrades-grid" class="upgrades-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-chart" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+          <h2 class="modal-title">Крива поширення епідемії (SEIR-модель)</h2>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="chart-container">
+          <canvas id="sir-canvas"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-color blue"></span>
+            <span>Здорові / Сприйнятливі (S)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color amber"></span>
+            <span>В інкубації / Приховані (E)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color red"></span>
+            <span>Хворі з симптомами (I)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color green"></span>
+            <span>Одужали / Вакциновані (R)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color gray"></span>
+            <span>Загиблі (D)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color cyan-dash"></span>
+            <span>Поріг лікарень</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-params" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 650px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+          <h2 class="modal-title">Параметри SEIR-моделі</h2>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Базова заразність (Infectivity β)</span>
+            <span id="disp-infectivity" class="param-val">0.65</span>
+          </div>
+          <input type="range" id="param-infectivity" class="param-slider" min="0.1" max="1.5" step="0.05" value="0.65">
+          <div class="param-hint">Ймовірність зараження при контакті зі сприйнятливою особою. Визначає базове репродуктивне число R₀.</div>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Тривалість інкубаційного періоду (днів)</span>
+            <span id="disp-incubation" class="param-val">5.5 дн.</span>
+          </div>
+          <input type="range" id="param-incubation" class="param-slider" min="1.0" max="14.0" step="0.5" value="5.5">
+          <div class="param-hint">Час, протягом якого вірус реплікується в організмі без симптомів (група Exposed), дозволяючи носіям вільно подорожувати.</div>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Летальність вірусу (Mortality μ)</span>
+            <span id="disp-lethality" class="param-val">1.5%</span>
+          </div>
+          <input type="range" id="param-lethality" class="param-slider" min="0.001" max="0.15" step="0.005" value="0.015">
+          <div class="param-hint">Частка випадків, що призводять до смерті. Зростає вдвічі при колапсі лікарень.</div>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Швидкість одужання (Recovery rate γ)</span>
+            <span id="disp-recovery" class="param-val">3.5%</span>
+          </div>
+          <input type="range" id="param-recovery" class="param-slider" min="0.01" max="0.15" step="0.005" value="0.035">
+          <div class="param-hint">Частка хворих, які щодня виробляють імунітет та переходять до групи одужалих (Recovered).</div>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Темп вакцинації після створення ліків</span>
+            <span id="disp-vaccine" class="param-val">3.0%</span>
+          </div>
+          <input type="range" id="param-vaccine" class="param-slider" min="0.005" max="0.1" step="0.005" value="0.03">
+          <div class="param-hint">Відсоток здорових людей, які щеплюються щодня після готовності вакцини на 100%.</div>
+        </div>
+
+        <div class="param-slider-group">
+          <div class="param-header">
+            <span class="param-label">Суворість карантину та закриття кордонів</span>
+            <span id="disp-lockdown" class="param-val">25.0%</span>
+          </div>
+          <input type="range" id="param-lockdown" class="param-slider" min="0.0" max="0.9" step="0.05" value="0.25">
+          <div class="param-hint">Ймовірність закриття аеропортів та морських портів при виявленні великої кількості хворих.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-countries" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          <h2 class="modal-title">Країни світу та статистика інфекції</h2>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="country-search" class="table-search-input" placeholder="Пошук країни за назвою або кодом...">
+        <div style="max-height: 500px; overflow-y: auto;">
+          <table class="countries-table">
+            <thead>
+              <tr>
+                <th>Країна</th>
+                <th>Населення</th>
+                <th>Інкубація (E)</th>
+                <th>Хворі (I)</th>
+                <th>Померлі (D)</th>
+                <th>Аеропорти</th>
+              </tr>
+            </thead>
+            <tbody id="countries-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-gameover" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 500px; text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h2 id="gameover-title" class="modal-title">Кінець гри</h2>
+      </div>
+      <div class="modal-body">
+        <div id="gameover-icon" style="margin-bottom: 20px; display: flex; justify-content: center;">
+          <!-- SVG вставляється через JS залежно від результату -->
+        </div>
+        <p id="gameover-reason" style="font-size: 16px; line-height: 1.6; margin-bottom: 24px; color: var(--text-secondary);"></p>
+        
+        <div class="global-counters" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          <div class="counter-box">
+            <span class="counter-label">Загинуло</span>
+            <span id="gameover-dead" class="counter-value dead">0</span>
+          </div>
+          <div class="counter-box">
+            <span class="counter-label">Вціліло</span>
+            <span id="gameover-survivors" class="counter-value healthy">0</span>
+          </div>
+        </div>
+
+        <button onclick="location.reload()" class="launch-game-btn" style="width: 100%;">
+          <span>Спробувати ще раз</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-theory" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+          <h2 class="modal-title">Біологія: SEIR-модель та еволюція вірусів</h2>
+        </div>
+        <button class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body theory-section">
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          1. Відмінність моделі SEIR від SIR (Інкубаційний період)
+        </h3>
+        <p>У класичній моделі SIR людина стає заразною миттєво після контакту. Насправді майже всі віруси людини (грип, кір, SARS-CoV-2) мають <strong>латентний/інкубаційний період</strong>:</p>
+        <div class="theory-card">
+          dS/dt = - β * S * (I + 0.5 * E) / N - V(t)<br>
+          dE/dt = β * S * (I + 0.5 * E) / N - σ * E<br>
+          dI/dt = σ * E - γ * I - μ * I<br>
+          dR/dt = γ * I + V(t)<br>
+          dD/dt = μ * I
+        </div>
+        <p>
+          <strong>S (Susceptible)</strong> — сприйнятливі здорові люди.<br>
+          <strong>E (Exposed)</strong> — інфіковані особи в інкубаційному періоді. Вони ще не мають симптомів (кашлю, лихоманки), термометрія в аеропортах їх не виявляє, але вони вже можуть переносити вірус через кордони.<br>
+          <strong>σ (сигма)</strong> — швидкість виходу з інкубаційного періоду (σ = 1 / тривалість інкубації в днях).<br>
+          <strong>I (Infected)</strong> — особи з вираженою клінічною картиною хвороби.<br>
+          <strong>R (Recovered)</strong> — одужалі носії з тривалим імунітетом та вакциновані.<br>
+          <strong>D (Dead)</strong> — померлі.
+        </p>
+
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          2. Базове репродуктивне число R₀ та пандемічний потенціал
+        </h3>
+        <p>
+          Число <strong>R₀ (R-naught)</strong> показує середню кількість вторинних заражень від одного первинного випадку в сприйнятливому середовищі:
+        </p>
+        <div class="theory-card">
+          R₀ ≈ β / (γ + μ)
+        </div>
+        <p>
+          • <strong>Іспанський грип 1918:</strong> R₀ ≈ 2.0 – 3.0, летальність 2.5% – 5%.<br>
+          • <strong>COVID-19 (початковий уханський штам):</strong> R₀ ≈ 2.5 – 3.5, тривалий інкубаційний період (5–7 днів).<br>
+          • <strong>Чорна смерть (чума):</strong> бактеріально-векторна передача, висока летальність до 60% без антибіотиків.
+        </p>
+
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          3. Чому вірус може застрягти в одній країні? (Екологічні бар'єри)
+        </h3>
+        <p>
+          Якщо патоген викликає важкі симптоми надто швидко, уряди встигають закрити міжнародне авіасполучення та морські порти до того, як інфіковані виїдуть за межі регіону. Саме тому для успішної всесвітньої пандемії вірусу життєво необхідні:
+        </p>
+        <ul style="margin-left: 20px; line-height: 1.8;">
+          <li><strong>Тривалий безсимптомний інкубаційний період (E)</strong>: носії встигають здійснити міжнародні перельоти.</li>
+          <li><strong>Зоонозний переносник</strong>: птахи та гризуни не зупиняються на закритих прикордонних КПП.</li>
+          <li><strong>Аерозольна передача</strong>: віріони циркулюють у замкнених кондиціонованих просторах авіалайнерів.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="countriesData.js"></script>
+  <script src="engine.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    const engine = new EpidemicEngine();
+    const ui = new AppUI(engine);
+  </script>
+</body>
+</html>
